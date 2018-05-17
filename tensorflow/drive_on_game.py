@@ -97,8 +97,8 @@ def game_pilot(ip, port, model_path, gpu, crop_start=126, crop_end=226):
             # Resize image to the format expected by the model
             cam_img_res = scipy.misc.imresize(np.array(cam_img)[crop_start:crop_end], [66, 200]) / 255.0
 
-            # Get steering angle from tensorflow model (Also convert from rad to degree)
-            degrees = model_out.eval(feed_dict={model_in: [cam_img_res], model_drop: 1.0})[0][0]
+            # Get steering angle from tensorflow model (Also convert from rad to degree), dropout 0 at test time.
+            degrees = model_out.eval(feed_dict={model_in: [cam_img_res], model_drop: 0.0})[0][0]
             print(degrees)
 
             # Send command to game here...
