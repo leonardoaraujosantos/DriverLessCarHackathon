@@ -1,2 +1,2 @@
 # DriverLessCarHackathon
-Tensorflow and Pytorch code for Behavioral clonning based on NVIDIA driverless car paper
+Tensorflow and Pytorch code for hackathon based on NVIDIA driverless car paper
