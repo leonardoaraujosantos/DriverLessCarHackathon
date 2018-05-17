@@ -8,6 +8,10 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from drive_dataset import DriveData_LMDB
 from drive_dataset import AugmentDrivingTransform
+from drive_dataset import RandomBrightness
+from drive_dataset import ConvertToGray
+from drive_dataset import ConvertToSepia
+from drive_dataset import AddNoise
 from drive_dataset import DrivingDataToTensor
 from torch.utils.data import DataLoader
 from model import CNNDriver
@@ -49,7 +53,9 @@ class Train:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        self.__transformations = transforms.Compose([AugmentDrivingTransform(), DrivingDataToTensor()])
+        self.__transformations = transforms.Compose([AugmentDrivingTransform(), 
+                                                     RandomBrightness(), ConvertToGray(), 
+                                                     ConvertToSepia(), AddNoise(), DrivingDataToTensor(),])
         self.__dataset_train = DriveData_LMDB(input, self.__transformations)
         self.__train_loader = DataLoader(self.__dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
 
@@ -86,7 +92,8 @@ class Train:
                 # Send loss to tensorboard
                 self.__writer.add_scalar('loss/', loss.item(), iteration_count)
                 self.__writer.add_histogram('steering_out', outputs.clone().detach().cpu().numpy(), iteration_count, bins='doane')
-                self.__writer.add_histogram('steering_in', labels.unsqueeze(dim=1).clone().detach().cpu().numpy(), iteration_count, bins='doane')
+                self.__writer.add_histogram('steering_in', 
+                                            labels.unsqueeze(dim=1).clone().detach().cpu().numpy(), iteration_count, bins='doane')
 
                 # Get current learning rate (To display on Tensorboard)
                 for param_group in self.__optimizer.param_groups:
