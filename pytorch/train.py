@@ -30,9 +30,9 @@ class Train:
     __optimizer = []
     __exp_lr_scheduler = []
 
-    def __init__(self):
+    def __init__(self, gpu='0'):
         # Device configuration
-        self.__device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.__device = torch.device('cuda:'+gpu if torch.cuda.is_available() else 'cpu')
         self.__writer = SummaryWriter('logs')
         self.__model = CNNDriver()
         # Set model to train mode
