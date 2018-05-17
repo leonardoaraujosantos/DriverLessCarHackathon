@@ -270,7 +270,7 @@ class HandleData:
                         shape_img = tuple(map(lambda x: int(x), info_key[2:None]))
                         self.__xs.append(np.frombuffer(value, dtype=np.uint8).reshape(shape_img).astype(np.float32))
 
-            self.__num_images = len(self.__xs)
+            
 
             # Create a zip list with images and angles
             c = list(zip(self.__xs, self.__ys))
@@ -316,7 +316,7 @@ class HandleData:
                             # Get image shape [2:None] means from index 2 to the end
                             shape_img = tuple(map(lambda x: int(x), info_key[2:None]))
                             self.__val_xs.append(np.frombuffer(value, dtype=np.uint8).reshape(shape_img).astype(np.float32))
-
+        self.__num_images = len(self.__train_xs)
 
     @staticmethod
     def get_list_from_file(file_list):
