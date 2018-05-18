@@ -10,6 +10,7 @@ class DrivingModel(object):
         self.__y_ = tf.placeholder(tf.float32, shape=[None, 1], name='LABEL_IN')
         self.__dropout_prob = tf.placeholder(tf.float32, name='drop_prob')
         self.__use_placeholder = use_placeholder
+        self.__trainmode = tf.placeholder(tf.bool, name='train_mode')
 
         """ START CHANGING MODEL HERE """
         # CONV 1
@@ -17,46 +18,46 @@ class DrivingModel(object):
             self.__conv1 = tf.layers.conv2d(self.__x, filters=24, kernel_size=5, strides=2, name='conv1')
         else:
             self.__conv1 = tf.layers.conv2d(input_, filters=24, kernel_size=5, strides=2, padding='valid', name='conv1')
-        self.__conv1_bn = tf.layers.batch_normalization(self.__conv1, training=training_mode, name='bn_c1')
+        self.__conv1_bn = tf.layers.batch_normalization(self.__conv1, training=self.__trainmode, name='bn_c1')
         self.__conv1_act = tf.nn.relu(self.__conv1_bn)
 
         # CONV 2
         self.__conv2 = tf.layers.conv2d(self.__conv1_act, filters=36, kernel_size=5, strides=2, padding='valid', name='conv2')
-        self.__conv2_bn = tf.layers.batch_normalization(self.__conv2, training=training_mode, name='bn_c2')
+        self.__conv2_bn = tf.layers.batch_normalization(self.__conv2, training=self.__trainmode, name='bn_c2')
         self.__conv2_act = tf.nn.relu(self.__conv2_bn)
 
         # CONV 3
         self.__conv3 = tf.layers.conv2d(self.__conv2_act, filters=48, kernel_size=5, strides=2, padding='valid', name='conv3')
-        self.__conv3_bn = tf.layers.batch_normalization(self.__conv3, training=training_mode, name='bn_c3')
+        self.__conv3_bn = tf.layers.batch_normalization(self.__conv3, training=self.__trainmode, name='bn_c3')
         self.__conv3_act = tf.nn.relu(self.__conv3_bn)
 
         # CONV 4
         self.__conv4 = tf.layers.conv2d(self.__conv3_act, filters=64, kernel_size=3, strides=1, padding='valid', name='conv4')
-        self.__conv4_bn = tf.layers.batch_normalization(self.__conv4, training=training_mode, name='bn_c4')
+        self.__conv4_bn = tf.layers.batch_normalization(self.__conv4, training=self.__trainmode, name='bn_c4')
         self.__conv4_act = tf.nn.relu(self.__conv4_bn)
 
         # CONV 5
         self.__conv5 = tf.layers.conv2d(self.__conv4_act, filters=64, kernel_size=3, strides=1, padding='valid', name='conv5')
-        self.__conv5_bn = tf.layers.batch_normalization(self.__conv5, training=training_mode, name='bn_c5')
+        self.__conv5_bn = tf.layers.batch_normalization(self.__conv5, training=self.__trainmode, name='bn_c5')
         self.__conv5_act = tf.nn.relu(self.__conv5_bn)
 
         self.__conv5_flat = tf.layers.flatten(self.__conv5_act, name='flatten_conv5')
 
         # Fully Connect 1 with dropout
         self.__fc1 = tf.layers.dense(self.__conv5_flat, units=1164, activation=tf.nn.relu, name='fc1')
-        self.__fc1_drop = tf.layers.dropout(self.__fc1, rate=self.__dropout_prob)
+        self.__fc1_drop = tf.layers.dropout(self.__fc1, rate=self.__dropout_prob, training=self.__trainmode)
 
         # Fully Connect 2 with dropout
         self.__fc2 = tf.layers.dense(self.__fc1_drop, units=100, activation=tf.nn.relu, name='fc2')
-        self.__fc2_drop = tf.layers.dropout(self.__fc2, rate=self.__dropout_prob)
+        self.__fc2_drop = tf.layers.dropout(self.__fc2, rate=self.__dropout_prob, training=self.__trainmode)
 
         # Fully Connect 3 with dropout
         self.__fc3 = tf.layers.dense(self.__fc2_drop, units=50, activation=tf.nn.relu, name='fc3')
-        self.__fc3_drop = tf.layers.dropout(self.__fc3, rate=self.__dropout_prob)
+        self.__fc3_drop = tf.layers.dropout(self.__fc3, rate=self.__dropout_prob, training=self.__trainmode)
 
         # Fully Connect 4 with dropout
         self.__fc4 = tf.layers.dense(self.__fc3_drop, units=10, activation=tf.nn.relu, name='fc4')
-        self.__fc4_drop = tf.layers.dropout(self.__fc4, rate=self.__dropout_prob)
+        self.__fc4_drop = tf.layers.dropout(self.__fc4, rate=self.__dropout_prob, training=self.__trainmode)
 
         # Output
         self.__y = tf.layers.dense(self.__fc4_drop, units=1, name='output_layer')
@@ -85,6 +86,10 @@ class DrivingModel(object):
     def dropout_control(self):
         return self.__dropout_prob
 
+    @property
+    def train_mode(self):
+        return self.__trainmode
+    
     @property
     def conv5(self):
         return self.__conv5_act
