@@ -44,9 +44,9 @@ class RandomBrightness(object):
             hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
             ratio = 1.0 + 0.1 * (np.random.rand() - 0.5)
             hsv[:,:,2] =  hsv[:,:,2] * ratio
-            sample['image'] = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB).astype('float32')
+            sample['image'] = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
 
-        return sample
+        return sample.astype('uint8')
 
 
 class ConvertToGray(object):
@@ -65,9 +65,9 @@ class ConvertToGray(object):
             img_new[:, :, 0] = gray
             img_new[:, :, 1] = gray
             img_new[:, :, 2] = gray
-            sample['image'] = img_new.astype('float32')
+            sample['image'] = img_new
 
-        return sample
+        return sample.astype('uint8')
 
 
 class ConvertToSepia(object):
@@ -84,7 +84,7 @@ class ConvertToSepia(object):
             img_new[:, :, 0] = 0.393 * r + 0.769 * g + 0.189 * b
             img_new[:, :, 1] = 0.349 * r + 0.686 * g + 0.168 * b
             img_new[:, :, 2] = 0.272 * r + 0.534 * g + 0.131 * b
-            sample['image'] = img_new.astype('float32')
+            sample['image'] = img_new
 
         return sample
 
@@ -99,11 +99,11 @@ class AddNoise(object):
         if prob > 0.5:            
             row,col,ch = image.shape
             gauss = np.random.randn(row,col,ch)
-            gauss = gauss.reshape(row,col,ch) / 30.0
+            gauss = gauss.reshape(row,col,ch) / 30
             img_new = image + image * gauss
-            sample['image'] = img_new.astype('float32')
+            sample['image'] = img_new
 
-        return sample
+        return sample.astype('uint8')
 
 
 class DrivingDataToTensor(object):
@@ -111,6 +111,7 @@ class DrivingDataToTensor(object):
 
     def __call__(self, sample):
         image, label = sample['image'], sample['label']
+        sample['image'] = (sample['image'] / 255.0).astype('float32')
 
         # swap color axis because
         # numpy image: H x W x C
@@ -153,7 +154,7 @@ class DriveData_LMDB(Dataset):
     # Override to give PyTorch access to any image on the dataset
     def __getitem__(self, index):
         img = self.__xs[index]
-        img = (scipy.misc.imresize(img[126:226], [66, 200]) / 255.0).astype('float32')
+        img = (scipy.misc.imresize(img[126:226], [66, 200]))
 
         # Convert label to torch tensors
         label = self.__ys[index]
