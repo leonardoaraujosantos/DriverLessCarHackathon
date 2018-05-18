@@ -1,10 +1,7 @@
-import skimage
-import skimage.filters
 import random
 from random import randint
-from random import shuffle
-import matplotlib.pyplot as plt
 import numpy as np
+import cv2
 
 class AugmentDrivingBatch:
 
@@ -14,7 +11,8 @@ class AugmentDrivingBatch:
         # Create a list of functions that could be applied on the batch
         self.__list_func = [lambda img: self.convert_to_gray(img), lambda img: self.add_noise(img),
                             lambda img: self.add_gaussian(img), lambda img: self.convert_to_sepia(img),
-                            lambda img: self.color_swap(img), lambda img: self.invert_color(img)]
+                            lambda img: self.color_swap(img),
+                            lambda img: self.invert_color(img), lambda img: self.random_shadow(img)]
 
     def augment(self, batch):
         # Roll the dice
@@ -64,6 +62,34 @@ class AugmentDrivingBatch:
         img[:, :, 2] = 0.272 * r + 0.534 * g + 0.131 * b
         return img
 
+    def random_shadow(self, img):
+        """
+        Generates and adds random shadow
+        """
+        # (x1, y1) and (x2, y2) forms a line
+        # xm, ym gives all the locations of the image
+        image = (img * 255.0).astype('uint8')
+        x1, y1 = image.shape[1] * np.random.rand(), 0
+        x2, y2 = image.shape[1] * np.random.rand(), image.shape[0]
+        xm, ym = np.mgrid[0:image.shape[0], 0:image.shape[1]]
+
+        # mathematically speaking, we want to set 1 below the line and zero otherwise
+        # Our coordinate is up side down.  So, the above the line:
+        # (ym-y1)/(xm-x1) > (y2-y1)/(x2-x1)
+        # as x2 == x1 causes zero-division problem, we'll write it in the below form:
+        # (ym-y1)*(x2-x1) - (y2-y1)*(xm-x1) > 0
+        mask = np.zeros_like(image[:, :, 1])
+        mask[np.where((ym - y1) * (x2 - x1) - (y2 - y1) * (xm - x1) > 0)] = 1
+
+        # choose which side should have shadow and adjust saturation
+        cond = mask == np.random.randint(2)
+        s_ratio = np.random.uniform(low=0.2, high=0.5)
+
+        # adjust Saturation in HLS(Hue, Light, Saturation)
+        hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+        hls[:, :, 1][cond] = hls[:, :, 1][cond] * s_ratio
+        return cv2.cvtColor(hls, cv2.COLOR_HLS2RGB).astype(img.dtype) / 255.0
+
     def add_noise(self, img):
         #new_img = skimage.util.random_noise(img,var=0.001)
         return img
@@ -101,6 +127,7 @@ class AugmentDrivingBatch:
         return new_batch
 
     def display_batch(self, batch):
-        for img, steering in batch:
-            plt.imshow(img)
-            plt.show()
+        pass
+        #for img, steering in batch:
+        #    plt.imshow(img)
+        #    plt.show()
